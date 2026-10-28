@@ -333,10 +333,11 @@ namespace NeonStrikers.Tests
             var gate = new CpuPulseGate(0.1f);
             Assert.AreEqual(0.4f, gate.Interval, 1e-6f, "interval is clamped to the 0.4 s minimum");
 
-            Assert.IsTrue(gate.TryConsume(1f));
-            Assert.IsFalse(gate.TryConsume(1f));
-            Assert.IsFalse(gate.TryConsume(1.39f));
-            Assert.IsTrue(gate.TryConsume(1.4f));
+            // Use a zero origin to test the exact stored cooldown interval.
+            Assert.IsTrue(gate.TryConsume(0f));
+            Assert.IsFalse(gate.TryConsume(0f));
+            Assert.IsFalse(gate.TryConsume(0.39f));
+            Assert.IsTrue(gate.TryConsume(0.4f));
         }
 
         // ---------------------------------------------------------------- prediction
