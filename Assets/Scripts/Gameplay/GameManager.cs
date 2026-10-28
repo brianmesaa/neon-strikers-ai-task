@@ -1,4 +1,5 @@
 using System.Collections;
+using NeonStrikers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -85,6 +86,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         CacheReferences();
+        ApplyGameMode();
 
         if (arenaRenderer != null)
             arenaOriginalColor = arenaRenderer.color;
@@ -113,6 +115,23 @@ public class GameManager : MonoBehaviour
             p2Rb = player2.GetComponent<Rigidbody2D>();
             p2LoseLaunch = player2.GetComponent<PlayerLoseLaunch>();
         }
+    }
+
+    /// <summary>
+    /// Two Players: Red stays on the keyboard (Arrow keys + Enter).
+    /// Vs Computer: Red (player2) is handed to <see cref="CpuPlayerController"/>; its keyboard keys are ignored.
+    /// Blue (player1) is always the human on WASD + Space.
+    /// Playing an arena directly (no menu selection) uses the default Two Players mode.
+    /// </summary>
+    void ApplyGameMode()
+    {
+        if (p2Movement == null)
+            return;
+
+        if (GameModeSettings.IsVsComputer)
+            CpuPlayerController.Attach(p2Movement, player1);
+        else
+            CpuPlayerController.Detach(p2Movement);
     }
 
     IEnumerator StartMatchSequence()

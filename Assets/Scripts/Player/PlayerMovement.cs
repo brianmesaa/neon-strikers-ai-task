@@ -43,6 +43,18 @@ public class PlayerMovement : MonoBehaviour
     private ZoneSlowable zoneSlowable;
     private bool isGrounded;
 
+    // External (computer) input. When enabled the keyboard keys above are ignored and these
+    // virtual keys are fed through exactly the same movement / lift / pulse code as a human.
+    private bool externalInputEnabled;
+    private int externalHorizontal;
+    private int externalVertical;
+    private bool externalActionQueued;
+
+    public bool CanMove => canMove;
+    public bool IsGrounded => isGrounded;
+    public bool UsesExternalInput => externalInputEnabled;
+    public Vector2 CurrentInputDirection => inputDirection;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -98,23 +110,74 @@ public class PlayerMovement : MonoBehaviour
         if (!canMove)
         {
             inputDirection = Vector2.zero;
+            // A queued computer pulse must not fire later when control comes back (e.g. at "GO!").
+            externalActionQueued = false;
             return;
         }
 
         float x = 0f;
         float y = 0f;
+        bool actionPressed;
 
-        if (Input.GetKey(leftKey)) x = -1f;
-        if (Input.GetKey(rightKey)) x = 1f;
-        if (Input.GetKey(upKey)) y = 1f;
-        if (Input.GetKey(downKey)) y = -1f;
+        if (externalInputEnabled)
+        {
+            x = externalHorizontal;
+            y = externalVertical;
+            actionPressed = externalActionQueued;
+            externalActionQueued = false;
+        }
+        else
+        {
+            if (Input.GetKey(leftKey)) x = -1f;
+            if (Input.GetKey(rightKey)) x = 1f;
+            if (Input.GetKey(upKey)) y = 1f;
+            if (Input.GetKey(downKey)) y = -1f;
+
+            actionPressed = Input.GetKeyDown(actionKey);
+        }
 
         inputDirection = new Vector2(x, y).normalized;
 
-        if (Input.GetKeyDown(actionKey))
+        if (actionPressed)
         {
             DoLift();
         }
+    }
+
+    /// <summary>
+    /// Switch this player between keyboard control and external (computer) control.
+    /// While enabled, upKey/downKey/leftKey/rightKey/actionKey are not read at all.
+    /// </summary>
+    public void SetExternalInputEnabled(bool enabled)
+    {
+        externalInputEnabled = enabled;
+        ClearExternalInput();
+
+        if (!enabled)
+            inputDirection = Vector2.zero;
+    }
+
+    /// <summary>
+    /// Virtual key state for this frame. Each axis behaves like a pair of keys (-1, 0 or +1);
+    /// actionPressed behaves like GetKeyDown(actionKey) and is consumed by the next input read.
+    /// </summary>
+    public void SetExternalInput(int horizontal, int vertical, bool actionPressed)
+    {
+        if (!externalInputEnabled)
+            return;
+
+        externalHorizontal = Mathf.Clamp(horizontal, -1, 1);
+        externalVertical = Mathf.Clamp(vertical, -1, 1);
+
+        if (actionPressed)
+            externalActionQueued = true;
+    }
+
+    void ClearExternalInput()
+    {
+        externalHorizontal = 0;
+        externalVertical = 0;
+        externalActionQueued = false;
     }
 
     void UpdateGroundedState()
@@ -230,6 +293,7 @@ public class PlayerMovement : MonoBehaviour
         if (!enabled)
         {
             inputDirection = Vector2.zero;
+            ClearExternalInput();
         }
     }
 

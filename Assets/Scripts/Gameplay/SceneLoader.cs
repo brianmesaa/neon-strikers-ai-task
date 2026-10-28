@@ -1,8 +1,12 @@
+using NeonStrikers;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SceneLoader : MonoBehaviour
 {
+    public const string FirstArenaScene = "Arena_01";
+    public const string MainMenuScene = "Main Menu";
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -11,10 +15,32 @@ public class SceneLoader : MonoBehaviour
         }
     }
 
+    /// <summary>Main Menu "Two Players" button: Blue = WASD + Space, Red = Arrow keys + Enter.</summary>
+    public void StartTwoPlayers()
+    {
+        StartNewSeries(GameMode.TwoPlayers);
+    }
+
+    /// <summary>Main Menu "Vs Computer" button: the human plays Blue, the computer plays Red.</summary>
+    public void StartVsComputer()
+    {
+        StartNewSeries(GameMode.VsComputer);
+    }
+
+    public void StartNewSeries(GameMode mode)
+    {
+        GameModeSettings.Select(mode);
+        LoadGame();
+    }
+
+    /// <summary>
+    /// Starts a fresh series in Arena_01 with the CURRENT mode ("Play Again" on the Results screen).
+    /// </summary>
     public void LoadGame()
     {
         MatchData.ResetMatch();
-        SceneManager.LoadScene("Arena_01");
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(FirstArenaScene);
     }
 
     public void LoadArena02()
@@ -32,10 +58,13 @@ public class SceneLoader : MonoBehaviour
         SceneManager.LoadScene("Results");
     }
 
+    /// <summary>Back to the menu: clears the series AND the mode so the player picks again.</summary>
     public void LoadMainMenu()
     {
         MatchData.ResetMatch();
-        SceneManager.LoadScene("Main Menu");
+        GameModeSettings.ResetToDefault();
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(MainMenuScene);
     }
 
     public void QuitGame()

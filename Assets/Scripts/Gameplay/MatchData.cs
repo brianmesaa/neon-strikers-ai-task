@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public static class MatchData
 {
     public static int blueMatchWins = 0;
@@ -20,5 +22,13 @@ public static class MatchData
 
         winnerText = "";
         currentArenaIndex = 0;
+    }
+
+    // Domain reload is disabled in this project (Enter Play Mode Options), so make sure every
+    // fresh launch / editor Play session starts a clean series, even when an arena is played directly.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetOnLaunch()
+    {
+        ResetMatch();
     }
 }
