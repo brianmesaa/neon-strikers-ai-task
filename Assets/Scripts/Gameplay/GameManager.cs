@@ -1,5 +1,6 @@
 using System.Collections;
 using NeonStrikers;
+using NeonStrikers.Arenas;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -85,6 +86,9 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // CustomArena scene only: build the custom layout before anything reads spawn points or goals.
+        CustomArenaBuilder.PrepareScene(this);
+
         CacheReferences();
         ApplyGameMode();
 
@@ -476,19 +480,17 @@ public class GameManager : MonoBehaviour
 
     void LoadNextArenaOrResults()
     {
+        // A playtest from the arena editor is a single match: go back to the editor with the result.
+        if (CustomArenaSession.IsPlaytesting)
+        {
+            ArenaEditorNavigation.ReturnToEditor("Playtest finished: " + MatchData.winnerText);
+            return;
+        }
+
+        int completedArenaIndex = MatchData.currentArenaIndex;
         MatchData.currentArenaIndex++;
 
-        if (MatchData.currentArenaIndex == 1)
-        {
-            SceneManager.LoadScene("Arena_02");
-        }
-        else if (MatchData.currentArenaIndex == 2)
-        {
-            SceneManager.LoadScene("Arena_03");
-        }
-        else
-        {
-            SceneManager.LoadScene("Results");
-        }
+        // Arena_01 -> Arena_02 -> Arena_03 -> (custom 4th arena, when one is assigned and valid) -> Results.
+        SceneManager.LoadScene(CustomArenaFlow.NextSceneAfter(completedArenaIndex, ArenaStorage.Default));
     }
 }
