@@ -1,4 +1,5 @@
 using NeonStrikers;
+using NeonStrikers.Arenas;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,7 +12,11 @@ public class SceneLoader : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            LoadMainMenu();
+            // While playtesting a custom arena, Esc returns to the arena editor instead of the menu.
+            if (CustomArenaSession.IsPlaytesting)
+                ReturnToArenaEditor();
+            else
+                LoadMainMenu();
         }
     }
 
@@ -38,6 +43,8 @@ public class SceneLoader : MonoBehaviour
     /// </summary>
     public void LoadGame()
     {
+        CustomArenaSession.EndPlaytest();
+        CustomArenaSession.SetFlowArena(null);
         MatchData.ResetMatch();
         Time.timeScale = 1f;
         SceneManager.LoadScene(FirstArenaScene);
@@ -61,10 +68,24 @@ public class SceneLoader : MonoBehaviour
     /// <summary>Back to the menu: clears the series AND the mode so the player picks again.</summary>
     public void LoadMainMenu()
     {
+        CustomArenaSession.EndPlaytest();
+        CustomArenaSession.SetFlowArena(null);
         MatchData.ResetMatch();
         GameModeSettings.ResetToDefault();
         Time.timeScale = 1f;
         SceneManager.LoadScene(MainMenuScene);
+    }
+
+    /// <summary>Main Menu "Arena Editor" button: create, edit, playtest and choose custom arenas.</summary>
+    public void OpenArenaEditor()
+    {
+        ArenaEditorNavigation.OpenEditor();
+    }
+
+    /// <summary>Leaves a playtest and goes back to the arena editor (the edited arena is kept).</summary>
+    public void ReturnToArenaEditor()
+    {
+        ArenaEditorNavigation.ReturnToEditor("Back from playtest. Your arena is exactly as you left it.");
     }
 
     public void QuitGame()
